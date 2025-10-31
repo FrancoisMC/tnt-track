@@ -1,0 +1,40 @@
+{
+  "stats": {
+    "executionTime": "2.45 seconds",
+    "totalShipments": 5,
+    "processed": 5
+  },
+  "results": [
+    {
+      "preparationId": 11,
+      "contractId": 123,
+      "lineId": 456,
+      "ticketId": 789,
+      "swapId": 10,
+      "trackingNumber": "ABC123",
+      "tntResponse": {
+        "TrackResponse": {
+          "consignment": [
+            {
+              "consignmentNumber": "ABC123",
+              "summaryCode": "DEL",
+              "statusData": [],
+              "deliveryDate": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "preparationId": 12,
+      "contractId": 124,
+      "lineId": 457,
+      "ticketId": 790,
+      "swapId": 11,
+      "trackingNumber": "XYZ789",
+      "tntResponse": {
+        "TrackResponse": {}
+      }
+    }
+  ]
+}

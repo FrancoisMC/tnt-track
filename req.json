@@ -1,0 +1,12 @@
+{
+  "shipments": [
+    {
+      "contractId": 123,
+      "lineId": 456,
+      "ticketId": 789,
+      "swapId": 10,
+      "preparationId": 11,
+      "trackingNumber": "ABC123"
+    }
+  ]
+}

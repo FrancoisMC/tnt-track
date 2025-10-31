@@ -1,0 +1,21 @@
+[
+    {
+        "preparationId": 13,
+        "contractId": 125,
+        "lineId": 458,
+        "ticketId": 791,
+        "swapId": 12,
+        "trackingNumber": "DEF456",
+        "error": "HTTP error! status: 404"
+    },
+    {
+        "error": "Bad Request",
+        "message": "Le body doit contenir un champ 'shipments' avec un tableau d'expéditions"
+    },
+    {
+        "error": "Erreur serveur",
+        "stats": {
+            "executionTime": "0.12 seconds"
+        }
+    }
+]
