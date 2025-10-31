@@ -105,23 +105,16 @@ app.post("/track", checkApiKey, async (req, res) => {
 
     // Traiter chaque expédition
     for (const shipment of shipments) {
-      // Vérifier les champs requis
-      if (
-        !shipment.trackingNumber ||
-        shipment.contractId === undefined ||
-        shipment.lineId === undefined ||
-        shipment.ticketId === undefined ||
-        shipment.swapId === undefined ||
-        shipment.preparationId === undefined
-      ) {
+      // Vérifier les champs requis (seul trackingNumber est obligatoire)
+      if (!shipment.trackingNumber) {
         results.push({
           preparationId: shipment.preparationId,
           contractId: shipment.contractId,
           lineId: shipment.lineId,
           ticketId: shipment.ticketId,
           swapId: shipment.swapId,
-          trackingNumber: shipment.trackingNumber || "N/A",
-          error: "Champs manquants dans l'expédition",
+          trackingNumber: "N/A",
+          error: "Le champ 'trackingNumber' est obligatoire",
         });
         continue;
       }
