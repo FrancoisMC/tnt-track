@@ -37,6 +37,72 @@ function checkApiKey(req, res, next) {
   next();
 }
 
+// Function to parse YYYYMMDD format to Date object
+function parseYYYYMMDD(dateString) {
+  if (!dateString) return null;
+  const year = dateString.substring(0, 4);
+  const month = dateString.substring(4, 6);
+  const day = dateString.substring(6, 8);
+  return new Date(`${year}-${month}-${day}`);
+}
+
+// Function to extract summary from TNT response
+function extractSummary(tntResponse) {
+  // Si erreur dans la réponse
+  if (tntResponse.TrackResponse?.error || !tntResponse.TrackResponse?.consignment) {
+    return {
+      status: 9,
+      statusDescription: tntResponse.TrackResponse?.error
+        ? `${tntResponse.TrackResponse.error.code}: ${tntResponse.TrackResponse.error.message}`
+        : "No consignment data found",
+      isDelivered: false,
+      deliveryDate: null,
+      summaryCode: null,
+    };
+  }
+
+  const consignment = tntResponse.TrackResponse.consignment[0];
+  let isDelivered = false;
+  let status = 0;
+  let statusDescription = consignment.statusData?.[0]?.statusDescription || "Unknown";
+  let deliveryDate = null;
+
+  // Handle different summary codes
+  switch (consignment.summaryCode) {
+    case "DEL":
+      isDelivered = true;
+      status = 2;
+      deliveryDate = consignment.deliveryDate?.value
+        ? parseYYYYMMDD(consignment.deliveryDate.value)
+        : null;
+      break;
+    case "CNF":
+      status = 8;
+      statusDescription = "Consignement Not Found (too old)";
+      break;
+    case "INT":
+      status = 1;
+      statusDescription = "In Transit";
+      break;
+    case "EXC":
+      status = 7;
+      statusDescription = consignment.statusData?.[0]
+        ? `${consignment.statusData[0].statusCode}:${consignment.statusData[0].statusDescription}`
+        : "Exception";
+      break;
+    default:
+      status = 0;
+  }
+
+  return {
+    status: status,
+    statusDescription: statusDescription,
+    isDelivered: isDelivered,
+    deliveryDate: deliveryDate,
+    summaryCode: consignment.summaryCode,
+  };
+}
+
 // Function to call TNT API
 async function callTNTApi(consignmentNumber) {
   // Create the payload
@@ -114,6 +180,13 @@ app.post("/track", checkApiKey, async (req, res) => {
           ticketId: shipment.ticketId,
           swapId: shipment.swapId,
           trackingNumber: "N/A",
+          summary: {
+            status: 9,
+            statusDescription: "Le champ 'trackingNumber' est obligatoire",
+            isDelivered: false,
+            deliveryDate: null,
+            summaryCode: null,
+          },
           error: "Le champ 'trackingNumber' est obligatoire",
         });
         continue;
@@ -123,6 +196,9 @@ app.post("/track", checkApiKey, async (req, res) => {
         // Appeler l'API TNT
         const tntResult = await callTNTApi(shipment.trackingNumber);
 
+        // Extraire le résumé
+        const summary = extractSummary(tntResult);
+
         // Préparer le résultat
         results.push({
           preparationId: shipment.preparationId,
@@ -131,6 +207,7 @@ app.post("/track", checkApiKey, async (req, res) => {
           ticketId: shipment.ticketId,
           swapId: shipment.swapId,
           trackingNumber: shipment.trackingNumber,
+          summary: summary,
           tntResponse: tntResult,
         });
       } catch (error) {
@@ -142,6 +219,13 @@ app.post("/track", checkApiKey, async (req, res) => {
           ticketId: shipment.ticketId,
           swapId: shipment.swapId,
           trackingNumber: shipment.trackingNumber,
+          summary: {
+            status: 9,
+            statusDescription: error.message,
+            isDelivered: false,
+            deliveryDate: null,
+            summaryCode: null,
+          },
           error: error.message,
         });
       }
